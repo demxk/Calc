@@ -27,4 +27,4 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./tests/Calculator.Tests/TestResults/6cfa4cf9-d68a-4f34-9cc7-9018291c94ca/coverage.cobertura.xml
+        # file: ./tests/Calculator.Tests/TestResults/6cfa4cf9-d68a-4f34-9cc7-9018291c94ca/coverage.cobertura.xml
