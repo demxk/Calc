@@ -2,20 +2,40 @@
 
 open System
 
-type Op =
-| Add
-| Sub
-| Mul
-| Div
+type Error = 
+    | DivideByZero
+    | ParseError
 
-let calc a b op = 
-    match op with
-    | Add -> Ok (a + b)
-    | Sub -> Ok (a - b)
-    | Mul -> Ok (a * b)
-    | _  -> if b <> 0 then Ok (a / b) else Error DivideByZeroException
+type Either<'T> =
+    | Ok of 'T
+    | Err of Error
 
-let print res =
-    match res with
-    | Ok value -> printf "Ok, value: %i" value
-    | Error _ -> printf "Error, div by zero"
+type ResultBuilder() =
+
+    member this.Bind(expr, f) =
+        match expr with
+        | Ok v -> f v
+        | Err e -> Err e
+
+    member this.Return(value) = Ok value
+
+    member this.ReturnFrom(m) = m
+
+let result = ResultBuilder()
+
+let Add x y = Ok (y + x)
+let Sub x y = Ok (y - x)
+let Mul x y = Ok (y * x)
+let Div x y = 
+    match x with
+    | 0 -> Err DivideByZero
+    | _ -> Ok (y / x)
+
+
+let printCal m =
+    match m with
+    | Ok value -> printfn "Ok -> %i" value
+    | Err err -> match err with
+                 | DivideByZero -> printfn "Error! -> Division by 0"
+                 | _ -> printfn "Error! -> Parse error"
+
