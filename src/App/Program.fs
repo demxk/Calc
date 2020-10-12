@@ -2,6 +2,9 @@
 
 open System.Numerics
 open Library
+open FSharp.Data
+open FSharp.Data.JsonExtensions
+open FsHttp
 
 [<EntryPoint>]
 let main argv =
@@ -23,5 +26,12 @@ let main argv =
         Complex(0., 0.)
         |> Seq.unfold(fun z -> let newz = z * z + c; in if Complex.Abs(newz) < 4. then Some(newz, newz) else None)
         |> Seq.truncate(n)
-    mandelbrot 5 (Complex(0.3, 0.6)) |> printf "%A"
+    mandelbrot 5 (Complex(0.3, 0.6)) |> printfn "%A"
+
+    let a = (http {
+        GET "http://localhost:5000?op=add&a=2&b=4"
+    } |> toJson)
+
+    printfn "%i" (a?result.AsInteger())
+
     0
