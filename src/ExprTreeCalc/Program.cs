@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq.Expressions;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace ExprTreeCalc
 {
@@ -11,6 +13,7 @@ namespace ExprTreeCalc
         {
             Console.WriteLine("Enter expression: ");
             var str = Console.ReadLine();
+            str = string.Concat(str.Where(c => !Char.IsWhiteSpace(c)));
             var rootExpr = buildExpr(str);
             var result = ExecutePar(rootExpr);
             Console.WriteLine(result);
@@ -40,15 +43,17 @@ namespace ExprTreeCalc
                         var t2 = Task.Factory.StartNew(
                             () => ExecutePar(l.Right, level + 1),
                             TaskCreationOptions.AttachedToParent);
+
                         var r = get_results(t1.Result, t2.Result, node.NodeType);
                         return r;
                     }
                     else
                     {
+
+                        System.Console.WriteLine($"Executing {l.Left} {node.NodeType} {l.Right} on thread: {Thread.CurrentThread.ManagedThreadId}");
                         return get_results(Transform(l.Left).Compile()(), Transform(l.Right).Compile()(),
                             node.NodeType);
                     }
-                    // var left = ExecutePar(l.Left);
 
                 }
                 default:
@@ -103,6 +108,7 @@ namespace ExprTreeCalc
 
                 else
                 {
+                    /* System.Console.WriteLine(str); */
                     return Expression.Constant(Int32.Parse(str.Trim()));
                 }
             }
