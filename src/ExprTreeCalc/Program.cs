@@ -7,76 +7,70 @@ using System.Threading;
 
 namespace ExprTreeCalc
 {
+
+    interface IEvaluatable<T> where T: Expression
+    {
+        public int Eval(T expr);
+    }
+
+    interface IEvaluatable
+    {
+        public int Evaluate(Expression expr);
+    }
+
+    class Executer: IEvaluatable,
+        IEvaluatable<BinaryExpression>,
+        IEvaluatable<ConstantExpression>
+    {
+        public Executer() {}
+        public int Evaluate(Expression expr)
+        {
+            return this.Eval((dynamic)expr);
+        }
+        public int Eval(Expression expr)
+        {
+            System.Console.WriteLine("InvalidOperation");
+            throw new InvalidOperationException();
+        }
+        
+        public int Eval(BinaryExpression binexrp)
+        {
+            var l = Evaluate(binexrp.Left);
+            var r = Evaluate(binexrp.Right);
+            return Program.get_res(l, r, binexrp.NodeType);
+            
+        }
+        public int Eval(ConstantExpression idexpr)
+        {
+            return (int) idexpr.Value;
+        }
+    }
     class Program
     {
-        static async Task Main(string[] args)
+        public static int get_res(int l, int r, ExpressionType e)
+        {
+            switch (e)
+            {
+                case ExpressionType.Add:
+                    return l + r;
+                case ExpressionType.Subtract:
+                    return l - r;
+                case ExpressionType.Multiply:
+                    return l * r;
+                default:
+                    return l / r;
+                    
+            }
+        }
+        static void Main(string[] args)
         {
             Console.WriteLine("Enter expression: ");
             var str = Console.ReadLine();
             str = string.Concat(str.Where(c => !Char.IsWhiteSpace(c)));
             var rootExpr = buildExpr(str);
-            var result = ExecutePar(rootExpr);
-            Console.WriteLine(result);
+            var executer = new Executer();
+            Console.WriteLine($"Answer: {executer.Evaluate(rootExpr)}");
         }
-
-        public static Expression<Func<int>> Transform(Expression e)
-        {
-            return (Expression<Func<int>>) Expression.Lambda(e);
-        }
-
-        public static int ExecutePar(Expression node, int level = 0)
-        {
-            switch (node.NodeType)
-            {
-                case ExpressionType.Add:
-                case ExpressionType.Subtract:
-                case ExpressionType.Multiply:
-                case ExpressionType.Divide:
-                {
-                    var l = (BinaryExpression) node;
-                    if (level < 2)
-                    {
-
-                        var t1 = Task.Factory.StartNew(
-                            () => ExecutePar(l.Left, level + 1),
-                            TaskCreationOptions.AttachedToParent);
-                        var t2 = Task.Factory.StartNew(
-                            () => ExecutePar(l.Right, level + 1),
-                            TaskCreationOptions.AttachedToParent);
-
-                        var r = get_results(t1.Result, t2.Result, node.NodeType);
-                        return r;
-                    }
-                    else
-                    {
-
-                        System.Console.WriteLine($"Executing {l.Left} {node.NodeType} {l.Right} on thread: {Thread.CurrentThread.ManagedThreadId}");
-                        return get_results(Transform(l.Left).Compile()(), Transform(l.Right).Compile()(),
-                            node.NodeType);
-                    }
-
-                }
-                default:
-                    return (int) (((ConstantExpression) node).Value);
-            }
-        }
-
-        private static int get_results(int t1Result, int t2Result, ExpressionType nodeNodeType)
-        {
-            switch (nodeNodeType)
-            {
-                case ExpressionType.Add:
-                    return t1Result + t2Result;
-                case ExpressionType.Subtract:
-                    return t1Result - t2Result;
-                case ExpressionType.Multiply:
-                    return t1Result * t2Result;
-                default:
-                    return t1Result / t2Result;
-                    
-            }
-        }
-
 
         public static Expression buildExpr(string str)
         {
@@ -89,16 +83,12 @@ namespace ExprTreeCalc
                 {
                     case 0:
                         return BinaryExpression.Add(left, right);
-                    // return new BinExpr(left, right, OpType.Add);
                     case 1:
                         return BinaryExpression.Subtract(left, right);
-                    // return new BinExpr(left, right, OpType.Sub);
                     case 2:
                         return BinaryExpression.Multiply(left, right);
-                    // return new BinExpr(left, right, OpType.Mul);
                     default:
                         return BinaryExpression.Divide(left, right);
-                    // return new BinExpr(left, right, OpType.Div);
                 }
             }
             else
@@ -108,7 +98,6 @@ namespace ExprTreeCalc
 
                 else
                 {
-                    /* System.Console.WriteLine(str); */
                     return Expression.Constant(Int32.Parse(str.Trim()));
                 }
             }
