@@ -13,35 +13,20 @@ namespace ExprTreeCalc
         {
         }
 
-        public int Visit(Expression node)
-        {
-            switch (node)
-            {
-                case BinaryExpression:
-                    return Visit((BinaryExpression) node);
-                case ConstantExpression:
-                    return Visit((ConstantExpression) node);
-                default:
-                    throw new InvalidCastException();
-            }
-        }
-
         public int Visit(BinaryExpression expr)
         {
-            Task<int> l = Task.Factory.StartNew(() => Visit(expr.Left));
-            Task<int> r = Task.Factory.StartNew(() => Visit(expr.Right));
-            Task.WaitAll(l, r);
-            Console.WriteLine($"Executing {expr} on thread {Thread.GetCurrentProcessorId()}");
+            var l = Visit((dynamic) expr.Left);
+            var r = Visit((dynamic) expr.Right);
             switch (expr.NodeType)
             {
                 case ExpressionType.Add:
-                    return l.Result + r.Result;
+                    return l + r;
                 case ExpressionType.Subtract:
-                    return l.Result - r.Result;
+                    return l - r;
                 case ExpressionType.Multiply:
-                    return l.Result * r.Result;
+                    return l * r;
                 default:
-                    return l.Result / r.Result;
+                    return l / r;
             }
         }
 
@@ -74,7 +59,7 @@ namespace ExprTreeCalc
             var str = Console.ReadLine();
             var rootExpr = buildExpr(str);
             var visitor = new ExprVisitor();
-            Console.WriteLine($"Answer: {visitor.Visit(rootExpr)}");
+            Console.WriteLine($"Answer: {visitor.Visit((dynamic)rootExpr)}");
         }
 
         public static Expression buildExpr(string str)
