@@ -7,47 +7,53 @@ using System.Threading;
 
 namespace ExprTreeCalc
 {
-
-    interface IEvaluatable<T> where T: Expression
+    class ExprVisitor : ExpressionVisitor
     {
-        public int Eval(T expr);
+        public ExprVisitor()
+        {
+        }
+
+        public int Visit(Expression node)
+        {
+            switch (node)
+            {
+                case BinaryExpression:
+                    return Visit((BinaryExpression) node);
+                case ConstantExpression:
+                    return Visit((ConstantExpression) node);
+                default:
+                    throw new InvalidCastException();
+            }
+        }
+
+        public int Visit(BinaryExpression expr)
+        {
+            Task<int> l = Task.Factory.StartNew(() => Visit(expr.Left));
+            Task<int> r = Task.Factory.StartNew(() => Visit(expr.Right));
+            Task.WaitAll(l, r);
+            Console.WriteLine($"Executing {expr} on thread {Thread.GetCurrentProcessorId()}");
+            switch (expr.NodeType)
+            {
+                case ExpressionType.Add:
+                    return l.Result + r.Result;
+                case ExpressionType.Subtract:
+                    return l.Result - r.Result;
+                case ExpressionType.Multiply:
+                    return l.Result * r.Result;
+                default:
+                    return l.Result / r.Result;
+            }
+        }
+
+        public int Visit(ConstantExpression expr)
+        {
+            return (int) expr.Value;
+        }
     }
 
-    interface IEvaluatable
-    {
-        public int Evaluate(Expression expr);
-    }
-
-    class Executer: IEvaluatable,
-        IEvaluatable<BinaryExpression>,
-        IEvaluatable<ConstantExpression>
-    {
-        public Executer() {}
-        public int Evaluate(Expression expr)
-        {
-            return this.Eval((dynamic)expr);
-        }
-        public int Eval(Expression expr)
-        {
-            System.Console.WriteLine("InvalidOperation");
-            throw new InvalidOperationException();
-        }
-        
-        public int Eval(BinaryExpression binexrp)
-        {
-            var l = Evaluate(binexrp.Left);
-            var r = Evaluate(binexrp.Right);
-            return Program.get_res(l, r, binexrp.NodeType);
-            
-        }
-        public int Eval(ConstantExpression idexpr)
-        {
-            return (int) idexpr.Value;
-        }
-    }
     class Program
     {
-        public static int get_res(int l, int r, ExpressionType e)
+        public static int evaluate(int l, int r, ExpressionType e)
         {
             switch (e)
             {
@@ -59,17 +65,16 @@ namespace ExprTreeCalc
                     return l * r;
                 default:
                     return l / r;
-                    
             }
         }
-        static void Main(string[] args)
+
+        public static void Main(string[] args)
         {
             Console.WriteLine("Enter expression: ");
             var str = Console.ReadLine();
-            str = string.Concat(str.Where(c => !Char.IsWhiteSpace(c)));
             var rootExpr = buildExpr(str);
-            var executer = new Executer();
-            Console.WriteLine($"Answer: {executer.Evaluate(rootExpr)}");
+            var visitor = new ExprVisitor();
+            Console.WriteLine($"Answer: {visitor.Visit(rootExpr)}");
         }
 
         public static Expression buildExpr(string str)
@@ -93,6 +98,7 @@ namespace ExprTreeCalc
             }
             else
             {
+                str = str.Trim();
                 if (str.Length > 2 && str[0] == '(' && str[^1] == ')')
                     return buildExpr(str.Substring(1, str.Length - 2));
 
