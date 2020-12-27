@@ -7,47 +7,38 @@ using System.Threading;
 
 namespace ExprTreeCalc
 {
-
-    interface IEvaluatable<T> where T: Expression
+    public class ExprVisitor : ExpressionVisitor
     {
-        public int Eval(T expr);
+        public ExprVisitor()
+        {
+        }
+
+        public int Visit(BinaryExpression expr)
+        {
+            var l = Visit((dynamic) expr.Left);
+            var r = Visit((dynamic) expr.Right);
+            switch (expr.NodeType)
+            {
+                case ExpressionType.Add:
+                    return l + r;
+                case ExpressionType.Subtract:
+                    return l - r;
+                case ExpressionType.Multiply:
+                    return l * r;
+                default:
+                    return l / r;
+            }
+        }
+
+        public int Visit(ConstantExpression expr)
+        {
+            return (int) expr.Value;
+        }
     }
 
-    interface IEvaluatable
+    public class Program
     {
-        public int Evaluate(Expression expr);
-    }
-
-    class Executer: IEvaluatable,
-        IEvaluatable<BinaryExpression>,
-        IEvaluatable<ConstantExpression>
-    {
-        public Executer() {}
-        public int Evaluate(Expression expr)
-        {
-            return this.Eval((dynamic)expr);
-        }
-        public int Eval(Expression expr)
-        {
-            System.Console.WriteLine("InvalidOperation");
-            throw new InvalidOperationException();
-        }
-        
-        public int Eval(BinaryExpression binexrp)
-        {
-            var l = Evaluate(binexrp.Left);
-            var r = Evaluate(binexrp.Right);
-            return Program.get_res(l, r, binexrp.NodeType);
-            
-        }
-        public int Eval(ConstantExpression idexpr)
-        {
-            return (int) idexpr.Value;
-        }
-    }
-    class Program
-    {
-        public static int get_res(int l, int r, ExpressionType e)
+        public static int evaluate(int l, int r, ExpressionType e)
         {
             switch (e)
             {
@@ -59,17 +50,16 @@ namespace ExprTreeCalc
                     return l * r;
                 default:
                     return l / r;
-                    
             }
         }
-        static void Main(string[] args)
+
+        public static void Main(string[] args)
         {
             Console.WriteLine("Enter expression: ");
             var str = Console.ReadLine();
-            str = string.Concat(str.Where(c => !Char.IsWhiteSpace(c)));
             var rootExpr = buildExpr(str);
-            var executer = new Executer();
-            Console.WriteLine($"Answer: {executer.Evaluate(rootExpr)}");
+            var visitor = new ExprVisitor();
+            Console.WriteLine($"Answer: {visitor.Visit((dynamic)rootExpr)}");
         }
 
         public static Expression buildExpr(string str)
@@ -93,6 +83,7 @@ namespace ExprTreeCalc
             }
             else
             {
+                str = str.Trim();
                 if (str.Length > 2 && str[0] == '(' && str[^1] == ')')
                     return buildExpr(str.Substring(1, str.Length - 2));
 
