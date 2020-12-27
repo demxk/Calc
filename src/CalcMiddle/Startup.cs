@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Hosting;
-using Calculator;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CalcMiddle
@@ -34,19 +33,19 @@ namespace CalcMiddle
 
             switch (op)
             {
-                case "add":
-                    result.result = Calculator.Calculator.Add(Convert.ToInt32(a), Convert.ToInt32(b));
+                case "Add":
+                    result.result = Calculator.Add(Convert.ToInt32(a), Convert.ToInt32(b));
                     break;
-                case "sub":
-                    result.result = Calculator.Calculator.Sub(Convert.ToInt32(a), Convert.ToInt32(b));
+                case "Sub":
+                    result.result = Calculator.Sub(Convert.ToInt32(a), Convert.ToInt32(b));
                     break;
-                case "mul":
-                    result.result = Calculator.Calculator.Mul(Convert.ToInt32(a), Convert.ToInt32(b));
+                case "Mul":
+                    result.result = Calculator.Mul(Convert.ToInt32(a), Convert.ToInt32(b));
                     break;
                 default:
                     try
                     {
-                        result.result = Calculator.Calculator.Div(Convert.ToInt32(a), Convert.ToInt32(b));
+                        result.result = Calculator.Div(Convert.ToInt32(a), Convert.ToInt32(b));
                     }
                     catch (DivideByZeroException)
                     {
