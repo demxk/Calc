@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace ExprTreeCalc
 {
-    class ExprVisitor : ExpressionVisitor
+    public class ExprVisitor : ExpressionVisitor
     {
         public ExprVisitor()
         {
@@ -36,7 +36,7 @@ namespace ExprTreeCalc
         }
     }
 
-    class Program
+    public class Program
     {
         public static int evaluate(int l, int r, ExpressionType e)
         {
