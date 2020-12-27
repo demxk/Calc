@@ -6,6 +6,19 @@ using System.Net.Mime;
 
 namespace CalcMiddle
 {
+    public class Calculator
+    {
+        public static int Add(int a, int b) => a + b;
+        public static int Sub(int a, int b) => a - b;
+        public static int Mul(int a, int b) => a * b;
+        public static int Div(int a, int b)
+        {
+            if(b == 0)
+                throw new DivideByZeroException();
+            return a / b;
+        }
+
+    }
     public class Result
     {
         public Result(int result)
@@ -30,19 +43,20 @@ namespace CalcMiddle
             var result = new Result(0);
             switch (op)
             {
-                case "add":
-                    result.result = Calculator.Calculator.Add(Convert.ToInt32(a), Convert.ToInt32(b));
+                case "Add":
+                    result.result = Calculator.Add(Convert.ToInt32(a), Convert.ToInt32(b));
+                    
                     break;
-                case "sub":
-                    result.result = Calculator.Calculator.Sub(Convert.ToInt32(a), Convert.ToInt32(b));
+                case "Sub":
+                    result.result = Calculator.Sub(Convert.ToInt32(a), Convert.ToInt32(b));
                     break;
-                case "mul":
-                    result.result = Calculator.Calculator.Mul(Convert.ToInt32(a), Convert.ToInt32(b));
+                case "Mul":
+                    result.result = Calculator.Mul(Convert.ToInt32(a), Convert.ToInt32(b));
                     break;
                 default:
                     try
                     {
-                        result.result = Calculator.Calculator.Div(Convert.ToInt32(a), Convert.ToInt32(b));
+                        result.result = Calculator.Div(Convert.ToInt32(a), Convert.ToInt32(b));
                     }
                     catch (DivideByZeroException)
                     {
